@@ -8,6 +8,8 @@ import io.th0rgal.oraxen.compatibilities.provided.lightapi.WrappedLightAPI;
 import io.th0rgal.oraxen.mechanics.Mechanic;
 import io.th0rgal.oraxen.mechanics.provided.gameplay.block.BlockMechanic;
 import io.th0rgal.oraxen.mechanics.provided.gameplay.block.BlockMechanicFactory;
+import io.th0rgal.oraxen.mechanics.provided.gameplay.bookshelf.BookshelfMechanic;
+import io.th0rgal.oraxen.mechanics.provided.gameplay.bookshelf.BookshelfMechanicFactory;
 import io.th0rgal.oraxen.mechanics.provided.gameplay.noteblock.NoteBlockMechanic;
 import io.th0rgal.oraxen.mechanics.provided.gameplay.noteblock.NoteBlockMechanicFactory;
 import io.th0rgal.oraxen.mechanics.provided.gameplay.stringblock.StringBlockMechanic;
@@ -23,6 +25,7 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.block.data.type.ChiseledBookshelf;
 import org.bukkit.block.data.type.NoteBlock;
 import org.bukkit.block.data.type.Tripwire;
 import org.bukkit.entity.Player;
@@ -298,5 +301,10 @@ public class OraxenBlocks {
         if (block.getType() == Material.MUSHROOM_STEM) {
             return BlockMechanicFactory.getBlockMechanic(BlockMechanic.getCode(block));
         } else return null;
+    }
+
+    public static BookshelfMechanic getBookshelfMechanic(Block block) {
+        if (!(block.getBlockData() instanceof ChiseledBookshelf chiseledBookshelf)) return null;
+        return BookshelfMechanicFactory.getBlockMechanic(BookshelfMechanicFactory.getCode(chiseledBookshelf));
     }
 }

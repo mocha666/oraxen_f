@@ -142,16 +142,16 @@ public class StringBlockMechanicFactory extends MechanicFactory {
     }
 
     /**
-     * Generate a NoteBlock blockdata from an oraxen id
+     * Generate a Tripwire blockdata from an oraxen id
      *
-     * @param itemID The id of an item implementing NoteBlockMechanic
+     * @param itemID The id of an item implementing StringBlockMechanic
      */
     public BlockData createTripwireData(String itemID) {
         /* We have 16 instruments with 25 notes. All of those blocks can be powered.
          * That's: 16*25*2 = 800 variations. The first 25 variations of PIANO (not powered)
          * will be reserved for the vanilla behavior. We still have 800-25 = 775 variations
          */
-        return createTripwireData(((StringBlockMechanic) getInstance().getMechanic(itemID)).getCustomVariation());
+        return createTripwireData(((StringBlockMechanic) instance.getMechanic(itemID)).getCustomVariation());
     }
 
     public void registerSaplingMechanic() {
