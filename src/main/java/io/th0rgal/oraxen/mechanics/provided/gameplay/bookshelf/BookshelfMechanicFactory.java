@@ -11,10 +11,13 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.type.ChiseledBookshelf;
 import org.bukkit.configuration.ConfigurationSection;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class BookshelfMechanicFactory extends MechanicFactory {
-
+    private static final int VARIATION_ID_OFFSET = 4 * 2; // 4 faces, empty and filled states
     public static final Map<Integer, BookshelfMechanic> BLOCK_PER_VARIATION = new HashMap<>();
     private static JsonObject variants;
     private static BookshelfMechanicFactory instance;
@@ -24,13 +27,18 @@ public class BookshelfMechanicFactory extends MechanicFactory {
         super(section);
         instance = this;
         variants = new JsonObject();
-        variants.add(getBlockstateVariantName(0), getModelJson("block/chiseled_bookshelf"));
+        for (BlockFace blockFace : chiseledFaces) {
+            variants.add(getBlockstateVariantName(blockFace, new ChiseledBookshelfOccupiedSlots(Set.of())), getModelJson("block/chiseled_bookshelf"));
+            variants.add(getBlockstateVariantName(blockFace, new ChiseledBookshelfOccupiedSlots(Set.of(1,2,3,4,5,6))), getModelJson("block/chiseled_bookshelf"));
+        }
         toolTypes = section.getStringList("tool_types");
 
         OraxenPlugin.get().getResourcePack().addModifiers(getMechanicID(), packFolder ->
                 OraxenPlugin.get().getResourcePack().writeStringToVirtual(
                         "assets/minecraft/blockstates", "chiseled_bookshelf.json", getBlockstateContent())
         );
+
+        MechanicsManager.registerListeners(OraxenPlugin.get(), new BookshelfMechanicListener());
     }
 
     private String getBlockstateContent() {
@@ -62,7 +70,7 @@ public class BookshelfMechanicFactory extends MechanicFactory {
     @Override
     public Mechanic parse(ConfigurationSection section) {
         BookshelfMechanic mechanic = new BookshelfMechanic(this, section);
-        variants.add("facing=" + mechanic.getCustomVariation(), getModelJson("block/chiseled_bookshelf"));
+        variants.add(getBlockstateVariantName(mechanic.getCustomVariation()), getModelJson("block/chiseled_bookshelf"));
 
         BLOCK_PER_VARIATION.put(mechanic.getCustomVariation(), mechanic);
         addToImplemented(mechanic);
@@ -71,36 +79,40 @@ public class BookshelfMechanicFactory extends MechanicFactory {
 
     private static final List<BlockFace> chiseledFaces = List.of(BlockFace.NORTH, BlockFace.SOUTH, BlockFace.WEST, BlockFace.EAST);
 
-    public static ChiseledBookshelf createBookshelfData(int code) {
-        ChiseledBookshelf data = (ChiseledBookshelf) Material.CHISELED_STONE_BRICKS.createBlockData();
-        int i = 0;
+    public static ChiseledBookshelf createBookshelfData(int id) {
+        ChiseledBookshelf data = (ChiseledBookshelf) Material.CHISELED_BOOKSHELF.createBlockData();
+        int i = VARIATION_ID_OFFSET;
         for (BlockFace face : chiseledFaces)
-            if ((code & 0x1 << i++) != 0) data.setFacing(face);
+            if ((id & 0x1 << i++) != 0) data.setFacing(face);
         for (int slot : new int[]{0, 1, 2, 3, 4, 5})
-            data.setSlotOccupied(slot, (code & 0x1 << i++) != 0);
+            i += (int) Math.pow(2, slot);
         return data;
     }
 
     public static int getCode(final ChiseledBookshelf blockData) {
-
-        int sum = 0;
+        int sum = VARIATION_ID_OFFSET;
         for (BlockFace blockFace : blockData.getFaces())
             sum += (int) Math.pow(2, chiseledFaces.indexOf(blockFace));
         for (int slot : blockData.getOccupiedSlots())
-            sum += (int) Math.pow(2, slot + 4);
+            sum += (int) Math.pow(2, slot);
+
+
         return sum;
     }
 
+
     public static String getBlockstateVariantName(int id) {
+        id += 8;
+        String facing = chiseledFaces.get(id / VARIATION_ID_OFFSET).toString().toLowerCase();
         return getBlockstateVariantName(createBookshelfData(id));
     }
 
     public static String getBlockstateVariantName(ChiseledBookshelf blockData) {
-        return "facing=" + blockData.getFacing() + "," + new ChiseledBookshelfOccupiedSlots(blockData.getOccupiedSlots());
+        return getBlockstateVariantName(blockData.getFacing(), new ChiseledBookshelfOccupiedSlots(blockData.getOccupiedSlots()));
     }
 
     public static String getBlockstateVariantName(BlockFace facing, ChiseledBookshelfOccupiedSlots occupiedSlots) {
-        return "facing=" + facing + "," + occupiedSlots.toString();
+        return "facing=" + facing.toString().toLowerCase() + "," + occupiedSlots.toString();
     }
 
     public static BookshelfMechanic getBlockMechanic(int customVariation) {

@@ -2,6 +2,7 @@ package io.th0rgal.oraxen.api;
 
 import com.jeff_media.morepersistentdatatypes.DataType;
 import io.th0rgal.oraxen.OraxenPlugin;
+import io.th0rgal.oraxen.api.events.OraxenBookshelfBreakEvent;
 import io.th0rgal.oraxen.api.events.OraxenNoteBlockBreakEvent;
 import io.th0rgal.oraxen.api.events.OraxenStringBlockBreakEvent;
 import io.th0rgal.oraxen.compatibilities.provided.lightapi.WrappedLightAPI;
@@ -211,6 +212,8 @@ public class OraxenBlocks {
             removeNoteBlock(block, player);
         } else if (isOraxenStringBlock(block)) {
             removeStringBlock(block, player);
+        } else if (isOraxenBookshelf(block)) {
+            removeBookshelf(block, player);
         } else return false;
         return true;
     }
@@ -267,6 +270,22 @@ public class OraxenBlocks {
         }, 1L);
     }
 
+    private static void removeBookshelf(Block block, @Nullable Player player) {
+        BookshelfMechanic mechanic = getBookshelfMechanic(block);
+        ItemStack item = player != null ? player.getInventory().getItemInMainHand() : new ItemStack(Material.AIR);
+        if (mechanic == null) return;
+
+        if (player != null) {
+            OraxenBookshelfBreakEvent breakEvent = new OraxenBookshelfBreakEvent(mechanic, block, player);
+            OraxenPlugin.get().getServer().getPluginManager().callEvent(breakEvent);
+            if (breakEvent.isCancelled()) return;
+        }
+
+        if (player != null && player.getGameMode() != GameMode.CREATIVE)
+            mechanic.getDrop().spawns(block.getLocation(), item);
+        block.setType(Material.AIR);
+    }
+
     /**
      * Get the OraxenBlock at a location
      *
@@ -289,6 +308,7 @@ public class OraxenBlocks {
         return switch (blockData.getMaterial()) {
             case NOTE_BLOCK -> getNoteBlockMechanic(blockData);
             case TRIPWIRE -> getStringMechanic(blockData);
+            case CHISELED_BOOKSHELF -> getBookshelfMechanic(blockData);
             default -> null;
         };
     }
@@ -327,7 +347,7 @@ public class OraxenBlocks {
     }
 
     public static BookshelfMechanic getBookshelfMechanic(Block block) {
-        if (!(block.getBlockData() instanceof ChiseledBookshelf chiseledBookshelf)) return null;
+        if (block == null || !(block.getBlockData() instanceof ChiseledBookshelf chiseledBookshelf)) return null;
         return BookshelfMechanicFactory.getBlockMechanic(BookshelfMechanicFactory.getCode(chiseledBookshelf));
     }
 

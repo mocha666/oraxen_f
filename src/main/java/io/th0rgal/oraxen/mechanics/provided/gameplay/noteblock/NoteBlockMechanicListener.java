@@ -290,11 +290,7 @@ public class NoteBlockMechanicListener implements Listener {
     @EventHandler
     public void onExplosionDestroy(EntityExplodeEvent event) {
         List<Block> blockList = event.blockList().stream().filter(block -> block.getType().equals(Material.NOTE_BLOCK)).toList();
-        blockList.forEach(block -> {
-            NoteBlockMechanic mechanic = OraxenBlocks.getNoteBlockMechanic(block);
-            if (mechanic != null)
-                OraxenBlocks.remove(block.getLocation(), null);
-        });
+        blockList.forEach(block -> OraxenBlocks.remove(block.getLocation(), null));
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -391,9 +387,8 @@ public class NoteBlockMechanicListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onMiddleClick(final InventoryCreativeEvent event) {
+        if (!(event.getInventory().getHolder() instanceof Player player)) return;
         if (event.getClick() != ClickType.CREATIVE) return;
-        final Player player = (Player) event.getInventory().getHolder();
-        if (player == null) return;
         if (event.getCursor().getType() == Material.NOTE_BLOCK) {
             final RayTraceResult rayTraceResult = player.rayTraceBlocks(6.0);
             if (rayTraceResult == null) return;
