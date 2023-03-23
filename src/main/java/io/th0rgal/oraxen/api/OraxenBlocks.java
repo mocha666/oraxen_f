@@ -52,6 +52,7 @@ public class OraxenBlocks {
         return switch (block.getType()) {
             case NOTE_BLOCK -> getNoteBlockMechanic(block) != null;
             case TRIPWIRE -> getStringMechanic(block) != null;
+            case CHISELED_BOOKSHELF -> getBookshelfMechanic(block) != null;
             default -> false;
         };
     }
@@ -64,7 +65,8 @@ public class OraxenBlocks {
      */
     public static boolean isOraxenBlock(String itemId) {
         return OraxenItems.hasMechanic(itemId, "noteblock")
-                || OraxenItems.hasMechanic(itemId, "stringblock");
+                || OraxenItems.hasMechanic(itemId, "stringblock")
+                || OraxenItems.hasMechanic(itemId, "bookshelf");
     }
 
     /**
@@ -105,6 +107,26 @@ public class OraxenBlocks {
      */
     public static boolean isOraxenStringBlock(String itemID) {
         return !StringBlockMechanicFactory.getInstance().isNotImplementedIn(itemID);
+    }
+
+    /**
+     * Check if a block is an instance of a BookshelfMechanic
+     *
+     * @param block The block to check
+     * @return true if the block is an instance of a BookshelfMechanic, otherwise false
+     */
+    public static boolean isOraxenBookshelf(Block block) {
+        return block.getType() == Material.CHISELED_BOOKSHELF && getBookshelfMechanic(block) != null;
+    }
+
+    /**
+     * Check if an itemID has a BookshelfMechanic
+     *
+     * @param itemID The itemID to check
+     * @return true if the itemID has a BookshelfMechanic, otherwise false
+     */
+    public static boolean isOraxenBookshelf(String itemID) {
+        return !BookshelfMechanicFactory.getInstance().isNotImplementedIn(itemID);
     }
 
     public static void place(String itemID, Location location) {
@@ -258,6 +280,7 @@ public class OraxenBlocks {
                     case NOTE_BLOCK -> getNoteBlockMechanic(location.getBlock());
                     case TRIPWIRE -> getStringMechanic(location.getBlock());
                     case MUSHROOM_STEM -> getBlockMechanic(location.getBlock());
+                    case CHISELED_BOOKSHELF -> getBookshelfMechanic(location.getBlock());
                     default -> null;
                 };
     }
@@ -305,6 +328,11 @@ public class OraxenBlocks {
 
     public static BookshelfMechanic getBookshelfMechanic(Block block) {
         if (!(block.getBlockData() instanceof ChiseledBookshelf chiseledBookshelf)) return null;
+        return BookshelfMechanicFactory.getBlockMechanic(BookshelfMechanicFactory.getCode(chiseledBookshelf));
+    }
+
+    public static BookshelfMechanic getBookshelfMechanic(BlockData blockData) {
+        if (!(blockData instanceof ChiseledBookshelf chiseledBookshelf)) return null;
         return BookshelfMechanicFactory.getBlockMechanic(BookshelfMechanicFactory.getCode(chiseledBookshelf));
     }
 }
