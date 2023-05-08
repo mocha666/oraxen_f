@@ -690,10 +690,12 @@ public class FurnitureMechanic extends Mechanic {
 
             if (mechanic.hasBarriers()) {
                 List<Location> barriers = getLocations(getFurnitureYaw(furniture), furnitureLoc, mechanic.getBarriers());
-                if (output.stream().anyMatch(barriers::contains))
-                    return false;
-            } else if (mechanic.hasHitbox() && output.stream().anyMatch(l -> !BlockHelpers.REPLACEABLE_BLOCKS.contains(l.getBlock().getType()) || mechanic.getHitboxLocations(furnitureLoc, mechanic.getHitbox()).contains(l)))
-                return false;
+                if (output.stream().anyMatch(barriers::contains)) return false;
+            } else if (mechanic.hasHitbox()) {
+                if (output.stream().anyMatch(l -> !BlockHelpers.REPLACEABLE_BLOCKS.contains(l.getBlock().getType()))) return false;
+                Set<Location> furnitureLocations = mechanic.getHitboxLocations(furnitureLoc, mechanic.getHitbox());
+                if (output.stream().anyMatch(l -> furnitureLocations.stream().anyMatch(l::equals))) return false;
+            }
         }
         return true;
     }
