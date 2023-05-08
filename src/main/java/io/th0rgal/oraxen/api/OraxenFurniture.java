@@ -1,10 +1,10 @@
 package io.th0rgal.oraxen.api;
 
+import io.th0rgal.oraxen.items.ItemUpdater;
 import io.th0rgal.oraxen.mechanics.provided.gameplay.furniture.BlockLocation;
 import io.th0rgal.oraxen.mechanics.provided.gameplay.furniture.FurnitureFactory;
 import io.th0rgal.oraxen.mechanics.provided.gameplay.furniture.FurnitureMechanic;
 import io.th0rgal.oraxen.utils.BlockHelpers;
-import io.th0rgal.oraxen.utils.logs.Logs;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -162,5 +162,19 @@ public class OraxenFurniture {
         final String itemID = entity.getPersistentDataContainer().get(FURNITURE_KEY, PersistentDataType.STRING);
         if (!OraxenItems.exists(itemID)) return null;
         return (FurnitureMechanic) FurnitureFactory.getInstance().getMechanic(itemID);
+    }
+
+    /**
+     * Ensures that the given entity is a Furniture, and updates its item if it is
+     * @param entity
+     */
+    public static void updateFurniture(Entity entity) {
+        if (!OraxenFurniture.isFurniture(entity)) return;
+        entity = OraxenFurniture.getFurnitureMechanic(entity).getBaseEntity(entity);
+        if (entity == null) return;
+        ItemStack oldItem = FurnitureMechanic.getFurnitureItem(entity);
+        ItemStack newItem = ItemUpdater.updateItem(oldItem);
+        if (oldItem == null || oldItem.equals(newItem)) return;
+        FurnitureMechanic.setFurnitureItem(entity, newItem);
     }
 }
