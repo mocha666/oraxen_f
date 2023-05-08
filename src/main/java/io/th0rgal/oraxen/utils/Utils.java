@@ -157,4 +157,9 @@ public class Utils {
         return itemStack;
     }
 
+    public static ItemStack getItemInHand(Player player, EquipmentSlot hand) {
+        if (hand == EquipmentSlot.HAND) return player.getInventory().getItemInMainHand();
+        else return player.getInventory().getItemInOffHand();
+    }
+
 }

@@ -4,7 +4,6 @@ import io.th0rgal.oraxen.mechanics.provided.gameplay.furniture.BlockLocation;
 import io.th0rgal.oraxen.mechanics.provided.gameplay.furniture.FurnitureFactory;
 import io.th0rgal.oraxen.mechanics.provided.gameplay.furniture.FurnitureMechanic;
 import io.th0rgal.oraxen.utils.BlockHelpers;
-import io.th0rgal.oraxen.utils.logs.Logs;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -161,6 +160,12 @@ public class OraxenFurniture {
     public static FurnitureMechanic getFurnitureMechanic(Entity entity) {
         final String itemID = entity.getPersistentDataContainer().get(FURNITURE_KEY, PersistentDataType.STRING);
         if (!OraxenItems.exists(itemID)) return null;
+        return (FurnitureMechanic) FurnitureFactory.getInstance().getMechanic(itemID);
+    }
+
+    public static FurnitureMechanic getFurnitureMechanic(ItemStack itemStack) {
+        if (!OraxenItems.exists(itemStack)) return null;
+        final String itemID = OraxenItems.getIdByItem(itemStack);
         return (FurnitureMechanic) FurnitureFactory.getInstance().getMechanic(itemID);
     }
 }

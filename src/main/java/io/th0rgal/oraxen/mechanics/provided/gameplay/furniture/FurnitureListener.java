@@ -35,6 +35,7 @@ import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryCreativeEvent;
+import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -43,6 +44,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.RayTraceResult;
+import org.bukkit.util.Vector;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -190,6 +192,73 @@ public class FurnitureListener implements Listener {
         if (!player.getGameMode().equals(GameMode.CREATIVE))
             item.setAmount(item.getAmount() - 1);
         event.setUseInteractedBlock(Event.Result.DENY);
+    }
+
+    // TODO Fix this logic
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.NORMAL)
+    public void onFurniturePlace(final PlayerInteractAtEntityEvent event) {
+        final Player player = event.getPlayer();
+        final Vector direction = player.getLocation().getDirection();
+        final EquipmentSlot hand = event.getHand();
+        final Entity placedAgainst = event.getRightClicked();
+        final Vector clickedPosition = event.getClickedPosition();
+
+        double adjustX = 0.0;
+        double adjustZ = 0.0;
+
+        if (direction.getX() >= 0.5) {
+            adjustX = 0.5;
+        } else if (direction.getX() <= -0.5) {
+            adjustX = -0.5;
+        }
+
+        if (direction.getZ() >= 0.5) {
+            adjustZ = 0.5;
+        } else if (direction.getZ() <= -0.5) {
+            adjustZ = -0.5;
+        }
+
+        Location placedAt = placedAgainst.getLocation().add(clickedPosition.getX() - adjustX, clickedPosition.getY(), clickedPosition.getZ() - adjustZ);
+        Block placedAtBlock = placedAt.getBlock();
+
+        // This would only happen when placing against an interaction entity
+        if (!OraxenPlugin.supportsDisplayEntities) return;
+        if (!OraxenFurniture.isFurniture(placedAgainst)) return;
+        if (player.getGameMode() == GameMode.ADVENTURE) return;
+        if (!ProtectionLib.canBuild(player, placedAtBlock.getLocation())) return;
+
+        ItemStack item = Utils.getItemInHand(player, hand);
+
+        FurnitureMechanic mechanic = OraxenFurniture.getFurnitureMechanic(item);
+        if (mechanic == null) return;
+
+        Block farm = placedAtBlock.getRelative(BlockFace.DOWN);
+        if (mechanic.farmlandRequired && farm.getType() != Material.FARMLAND) return;
+
+        if (mechanic.farmblockRequired) {
+            if (farm.getType() != Material.NOTE_BLOCK) return;
+            NoteBlockMechanic farmMechanic = OraxenBlocks.getNoteBlockMechanic(farm);
+            if (farmMechanic == null || !farmMechanic.hasDryout()) return;
+            if (!farmMechanic.getDryout().isFarmBlock()) return;
+        }
+
+        final Rotation rotation = getRotation(player.getEyeLocation().getYaw(), mechanic.getBarriers().size() > 1);
+        final float yaw = rotationToYaw(rotation);
+
+        Entity baseEntity = mechanic.place(placedAt, item, rotation, yaw, event.getPlayer().getFacing().getOppositeFace());
+        Utils.swingHand(player, event.getHand());
+
+        final OraxenFurniturePlaceEvent furniturePlaceEvent = new OraxenFurniturePlaceEvent(mechanic, placedAtBlock, baseEntity, player);
+        Bukkit.getPluginManager().callEvent(furniturePlaceEvent);
+
+        if (furniturePlaceEvent.isCancelled()) {
+            OraxenFurniture.remove(baseEntity, null);
+            return;
+        }
+
+        if (!player.getGameMode().equals(GameMode.CREATIVE))
+            item.setAmount(item.getAmount() - 1);
+        event.setCancelled(true);
     }
 
     private Block getTarget(Block placedAgainst, BlockFace blockFace) {
