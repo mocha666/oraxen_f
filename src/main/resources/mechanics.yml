@@ -87,6 +87,7 @@ furniture:
   evolution_check_delay: 200
   enabled: true
   detect_viabackwards: true  # Blocks use of Item Display Furniture when server allows clients below 1.19.4
+  count_hitbox_in_place_space_check: true # Determines if the 1.19.4+ Interaction Entity hitbox should count in spacing check
 
 durability:
   enabled: true

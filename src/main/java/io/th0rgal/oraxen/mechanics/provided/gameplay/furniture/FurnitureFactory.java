@@ -20,6 +20,7 @@ public class FurnitureFactory extends MechanicFactory {
     private static EvolutionTask evolutionTask;
     public final boolean customSounds;
     public final boolean detectViabackwards;
+    public final boolean countHitboxInPlaceSpaceCheck;
 
     public FurnitureFactory(ConfigurationSection section) {
         super(section);
@@ -36,6 +37,7 @@ public class FurnitureFactory extends MechanicFactory {
 
         if (customSounds) MechanicsManager.registerListeners(OraxenPlugin.get(), new FurnitureSoundListener());
         detectViabackwards = OraxenPlugin.get().getConfigsManager().getMechanics().getConfigurationSection("furniture").getBoolean("detect_viabackwards", true);
+        countHitboxInPlaceSpaceCheck = OraxenPlugin.get().getConfigsManager().getMechanics().getConfigurationSection("furniture").getBoolean("count_hitbox_in_place_space_check", true);
     }
 
     @Override

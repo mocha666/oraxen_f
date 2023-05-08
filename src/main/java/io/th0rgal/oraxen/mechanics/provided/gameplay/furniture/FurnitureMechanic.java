@@ -653,17 +653,49 @@ public class FurnitureMechanic extends Mechanic {
         }
     }
 
-    public List<Location> getLocations(float rotation, Location center, List<BlockLocation> relativeCoordinates) {
+    public static List<Location> getLocations(float rotation, Location origin, List<BlockLocation> relativeCoordinates) {
         List<Location> output = new ArrayList<>();
         for (BlockLocation modifier : relativeCoordinates)
-            output.add(modifier.groundRotate(rotation).add(center));
+            output.add(modifier.groundRotate(rotation).add(origin));
         return output;
     }
 
+    /**
+     * Checks if the furniture you are trying to place is intersecting with the barrier or hitbox of another furniture
+     */
     public boolean notEnoughSpace(float yaw, Location rootLocation) {
-        if (!hasBarriers()) return false;
+        if (!hasBarriers() && !hasHitbox()) return false;
         return !getLocations(yaw, rootLocation, getBarriers()).stream().map(l -> l.getBlock().getType())
-                .allMatch(BlockHelpers.REPLACEABLE_BLOCKS::contains);
+                .allMatch(BlockHelpers.REPLACEABLE_BLOCKS::contains) ||
+                !checkHitboxLocations(rootLocation);
+    }
+
+    private Set<Location> getHitboxLocations(Location origin, FurnitureHitbox hitbox) {
+        Set<Location> output = new HashSet<>();
+        if (hitbox != null) for (int x = 0; x <= hitbox.width; x++)
+            for (int y = 0; y <= hitbox.height; y++)
+                for (int z = 0; z <= hitbox.width; z++)
+                    output.add(origin.clone().add(x, y, z));
+        return output;
+    }
+    private boolean checkHitboxLocations(Location origin) {
+        Set<Location> output = getHitboxLocations(origin, hitbox);
+        assert origin.getWorld() != null;
+        for (Entity entity : origin.getWorld().getNearbyEntities(origin, 10, 10, 10)) {
+            FurnitureMechanic mechanic = OraxenFurniture.getFurnitureMechanic(entity);
+            if (mechanic == null) continue;
+            Entity furniture = mechanic.getBaseEntity(entity);
+            if (furniture == null || entity != furniture) continue;
+            Location furnitureLoc = BlockHelpers.toBlockLocation(furniture.getLocation());
+
+            if (mechanic.hasBarriers()) {
+                List<Location> barriers = getLocations(getFurnitureYaw(furniture), furnitureLoc, mechanic.getBarriers());
+                if (output.stream().anyMatch(barriers::contains))
+                    return false;
+            } else if (mechanic.hasHitbox() && output.stream().anyMatch(l -> !BlockHelpers.REPLACEABLE_BLOCKS.contains(l.getBlock().getType()) || mechanic.getHitboxLocations(furnitureLoc, mechanic.getHitbox()).contains(l)))
+                return false;
+        }
+        return true;
     }
 
     public static float getFurnitureYaw(Entity entity) {
@@ -798,7 +830,8 @@ public class FurnitureMechanic extends Mechanic {
         return switch (furnitureType) {
             case ITEM_FRAME -> EntityType.ITEM_FRAME;
             case GLOW_ITEM_FRAME -> EntityType.GLOW_ITEM_FRAME;
-            case DISPLAY_ENTITY -> OraxenPlugin.supportsDisplayEntities ? EntityType.ITEM_DISPLAY : EntityType.ITEM_FRAME;
+            case DISPLAY_ENTITY ->
+                    OraxenPlugin.supportsDisplayEntities ? EntityType.ITEM_DISPLAY : EntityType.ITEM_FRAME;
             //case ARMOR_STAND -> EntityType.ARMOR_STAND;
         };
     }

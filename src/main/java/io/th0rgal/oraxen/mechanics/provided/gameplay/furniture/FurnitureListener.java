@@ -8,7 +8,6 @@ import io.th0rgal.oraxen.api.OraxenItems;
 import io.th0rgal.oraxen.api.events.OraxenFurnitureBreakEvent;
 import io.th0rgal.oraxen.api.events.OraxenFurnitureInteractEvent;
 import io.th0rgal.oraxen.api.events.OraxenFurniturePlaceEvent;
-import io.th0rgal.oraxen.config.Message;
 import io.th0rgal.oraxen.mechanics.MechanicFactory;
 import io.th0rgal.oraxen.mechanics.provided.gameplay.noteblock.NoteBlockMechanic;
 import io.th0rgal.oraxen.utils.BlockHelpers;
@@ -165,10 +164,6 @@ public class FurnitureListener implements Listener {
         final float yaw = rotationToYaw(rotation);
         if (player.getGameMode() == GameMode.ADVENTURE)
             blockPlaceEvent.setCancelled(true);
-        if (mechanic.notEnoughSpace(yaw, block.getLocation())) {
-            blockPlaceEvent.setCancelled(true);
-            Message.NOT_ENOUGH_SPACE.send(player);
-        }
 
         if (!blockPlaceEvent.canBuild() || blockPlaceEvent.isCancelled()) {
             block.setBlockData(currentBlockData);
