@@ -246,7 +246,7 @@ public class FurnitureMechanic extends Mechanic {
     }
 
     public boolean hasHitbox() {
-        return !hasBarriers() && hitbox != null;
+        return hitbox != null;
     }
 
     public FurnitureHitbox getHitbox() {
