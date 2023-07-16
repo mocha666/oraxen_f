@@ -1,6 +1,9 @@
+name: foliabuild
+
 on:
+  push:
+    branches: [folia_support]
   pull_request:
-    types: [closed]
     branches: [folia_support]
 
 jobs:
